@@ -216,7 +216,7 @@ function SingleView()   {
                 <p className="strict">{comment.content}</p>
                 <div>
                     <span className="from_someone">from {comment.from},
-                        on {date.getFullYear()}-{date.getMonth()}-{date.getDate()},
+                        on {date.getFullYear()}-{date.getMonth()+1}-{date.getDate()},
                         at {date.getHours()}:{date.getMinutes()}:{date.getSeconds()}</span>
                 </div>
             </div>
@@ -294,11 +294,12 @@ function SingleView()   {
                     data.map(comment => {
                         const date = new Date();
                         date.setTime(comment.date);
+                        const formattedDate = `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}-${date.getDate().toString().padStart(2, '0')}`;
                         let isInArray = false;
                         let index = -1;
 
                         for (let i = 0; i < commentArray.length; i++) {
-                            if (date.getMonth() + '-' + date.getDate() === commentArray[i].date) {
+                            if (formattedDate === commentArray[i].date) {
                                 isInArray = true;
                                 index = i;
                             }
@@ -307,7 +308,7 @@ function SingleView()   {
                         if (isInArray === true) {
                             commentArray[index].times++;
                         } else {
-                            commentArray.push({date: date.getMonth() + '-' + date.getDate(), times: 1});
+                            commentArray.push({date: formattedDate, times: 1});
                         }
                     });
 

@@ -134,6 +134,54 @@ function MemeMaker() {
     const [showGenerateLocal, setShowGenerateLocal] = useState(false);
     const [doneLocal, setDoneLocal] = useState('');
 
+    // 新增：AI Agent 相关的状态控制
+    const [aiLoading, setAiLoading] = useState(false);
+
+    const handleAIAgentHelp = async () => {
+        setAiLoading(true);
+
+        // 构造发送给 Agent 的上下文
+        const payload = {
+            templateName: caption || "未知模板",
+            currentTopText: topText,
+            currentMiddleText: middleText,
+            currentBottomText: bottomText
+        };
+
+        try {
+            const response = await fetch("http://localhost:3002/memes/ai-agent-generate", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(payload)
+            });
+
+            if (!response.ok) throw new Error("Agent 响应异常");
+            const data = await response.json();
+
+            // 成功拿到 Agent 的结构化决策数据后，批量更新 Canvas 的 State
+            if (data && data.success) {
+                const { title: aiTitle, top, middle, bottom } = data.memeConfig;
+
+                if (aiTitle) setTitle(aiTitle);
+                setTopText(top || '');
+                setMiddleText(middle || '');
+                setBottomText(bottom || '');
+
+                // 触发重绘标志（跟你原有的 Canvas 刷新机制对齐）
+                setFirst(true);
+            } else {
+                alert("AI Agent 思考失败，请重试");
+            }
+        } catch (error) {
+            console.error("Agent 交互错误:", error);
+            alert("网络异常，AI 降级，请手动输入");
+        } finally {
+            setAiLoading(false);
+        }
+    };
+
     const handleCloseDraw = () => {
         setShowDraw(false);
         setImage(null);
@@ -800,6 +848,20 @@ function MemeMaker() {
                             <br/>
                         </div>
                         <div className="right-div">
+                            {/* 新增：AI 一键整活按钮 */}
+                            <div className="ai-agent-panel" style={{ marginBottom: '15px', padding: '10px', background: '#f0f4f8', borderRadius: '8px' }}>
+                                <Button
+                                    variant="success"
+                                    onClick={handleAIAgentHelp}
+                                    disabled={aiLoading}
+                                    style={{ width: '100%', fontWeight: 'bold' }}
+                                >
+                                    {aiLoading ? '✨ AI Agent 正在脑暴热梗...' : '🚀 AI Agent 一键智能带梗'}
+                                </Button>
+                                <small style={{ color: '#666', display: 'block', marginTop: '5px' }}>
+                                    提示：选择好模板后，输入任何碎碎念，点击上方按钮让 AI 自动为你匹配最优配文和标题。
+                                </small>
+                            </div>
                             Name a title
                             <input
                                 type="text"
